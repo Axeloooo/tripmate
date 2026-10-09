@@ -39,6 +39,14 @@ jobs:
         env:
           BASE: ${{ github.base_ref }}
         run: cz check --rev-range "origin/${BASE}..HEAD"
+      - name: Reject AI attribution trailers
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          if git log --format=%B "origin/${BASE}..HEAD" | grep -qiE '^(Co-Authored-By|Claude-Session):'; then
+            echo "Commits must not carry Co-Authored-By or Claude-Session trailers." >&2
+            exit 1
+          fi
       - name: Check PR title
         env:
           TITLE: ${{ github.event.pull_request.title }}
