@@ -1,0 +1,33 @@
+[tool.commitizen]
+name = "cz_customize"
+
+[tool.commitizen.customize]
+message_template = "{{change_type}}{% if scope %}({{scope}}){% endif %}: {{message}}"
+schema = "<type>(<scope>): <subject>"
+schema_pattern = '^(feat|fix|docs|infra|chore|test|refactor|ci)(\([\w./-]+\))?!?: .{1,100}(\n[\s\S]*)?$'
+example = "feat(api): add trip export endpoint"
+
+[[tool.commitizen.customize.questions]]
+type = "list"
+name = "change_type"
+message = "Select the type of change"
+choices = [
+  { value = "feat", name = "feat: new feature (minor)" },
+  { value = "fix", name = "fix: bug fix (patch)" },
+  { value = "docs", name = "docs: documentation only" },
+  { value = "infra", name = "infra: tooling, CI, build, dependencies (patch)" },
+  { value = "chore", name = "chore: maintenance" },
+  { value = "test", name = "test: tests only" },
+  { value = "refactor", name = "refactor: code change without behavior change" },
+  { value = "ci", name = "ci: CI-only change" },
+]
+
+[[tool.commitizen.customize.questions]]
+type = "input"
+name = "scope"
+message = "Scope (optional):"
+
+[[tool.commitizen.customize.questions]]
+type = "input"
+name = "message"
+message = "Short description:"

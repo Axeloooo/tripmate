@@ -1,0 +1,86 @@
+name: PR checks
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches: [devel, main]
+
+permissions:
+  contents: read
+
+jobs:
+  branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch names
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          if [ "$BASE" = "main" ]; then
+            [ "$HEAD" = "devel" ] || { echo "PRs into main must come from devel (got $HEAD)"; exit 1; }
+          elif [ "$BASE" = "devel" ] && [ "$HEAD" = "main" ]; then
+            echo "Back-merge main -> devel allowed"
+          else
+            [[ "$HEAD" =~ ^(feature|fix|docs|infra)/[a-z0-9][a-z0-9._-]*$ ]] || { echo "Branch must match (feature|fix|docs|infra)/short-description (got $HEAD)"; exit 1; }
+          fi
+
+  commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - run: pip install -r apps/api/requirements-dev.txt
+      - name: Check commit messages
+        env:
+          BASE: ${{ github.base_ref }}
+        run: cz check --rev-range "origin/${BASE}..HEAD"
+      - name: Check PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: cz check -m "$TITLE"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: apps/api/requirements*.txt
+      - run: pip install -r apps/api/requirements-dev.txt
+      - run: black --check .
+        working-directory: apps/api
+      - run: ruff check .
+        working-directory: apps/api
+      - run: mypy
+        working-directory: apps/api
+
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --check .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: apps/api/requirements*.txt
+      - run: pip install -r apps/api/requirements-dev.txt
+      - run: pytest
+        working-directory: apps/api

@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: tripmate
+      POSTGRES_PASSWORD: tripmate
+      POSTGRES_DB: tripmate
+    ports:
+      - "5432:5432"
+    volumes:
+      - tripmate-pgdata:/var/lib/postgresql/data
+
+volumes:
+  tripmate-pgdata:
