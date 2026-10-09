@@ -39,8 +39,8 @@ export function NewTrip({ api }: { api: TripApi }) {
       next.budget = "Enter a budget from $100 to $100,000.";
     setErrors(next);
     if (Object.keys(next).length > 0) {
-      requestAnimationFrame(() =>
-        document.querySelector<HTMLInputElement>('form [aria-invalid="true"]')?.focus(),
+      requestAnimationFrame(
+        () => document.querySelector<HTMLInputElement>('form [aria-invalid="true"]')?.focus(),
       );
       return;
     }
