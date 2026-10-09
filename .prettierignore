@@ -5,3 +5,4 @@ CHANGELOG.md
 venv/
 dist/
 build/
+.claude/skills/

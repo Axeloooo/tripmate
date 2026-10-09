@@ -26,6 +26,10 @@ npx prettier --write .
 - `TripState` is a `TypedDict` with `total=False`. `plan_trip` invokes the graph and shapes the result.
 - Tests use `FakeListChatModel` and SQLite, so no API key or database is needed.
 
+## Skills
+
+The superpowers, frontend-design and Figma skills are vendored in `.claude/skills/` (see its README for sources and licenses). They are third-party: do not edit them or run formatters on them.
+
 ## Conventions
 
 - Conventional Commits. Types and release effect: `feat` minor, `fix` and `infra` patch, `docs`, `chore`, `test`, `refactor`, `ci` no release. Breaking changes (`!`) are major. Enforced by commitizen (`pyproject.toml`) locally and in CI.

@@ -6,10 +6,12 @@ requires-python = ">=3.13"
 [tool.black]
 line-length = 100
 target-version = ["py313"]
+extend-exclude = "^/\\.claude/skills/"
 
 [tool.ruff]
 target-version = "py313"
 line-length = 100
+extend-exclude = [".claude/skills"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "RUF"]
