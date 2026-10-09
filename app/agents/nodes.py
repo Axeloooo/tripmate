@@ -1,3 +1,4 @@
+import re
 from collections.abc import Callable
 
 from langchain_core.language_models import BaseChatModel
@@ -46,7 +47,10 @@ def make_nodes(llm: BaseChatModel) -> dict[str, Callable[[TripState], dict]]:
     def itinerary_agent(state: TripState) -> dict:
         human = f"{_trip_brief(state)}\n\nResearch notes:\n{state['research']}"
         if state.get("review"):
-            human += f"\n\nReviewer feedback to address:\n{state['review']}"
+            human += (
+                f"\n\nPrevious itinerary:\n{state['itinerary']}"
+                f"\n\nReviewer feedback to address:\n{state['review']}"
+            )
         return {"itinerary": _ask(llm, ITINERARY_SYSTEM, human)}
 
     def budget_agent(state: TripState) -> dict:
@@ -61,7 +65,7 @@ def make_nodes(llm: BaseChatModel) -> dict[str, Callable[[TripState], dict]]:
         review = _ask(llm, REVIEWER_SYSTEM, human)
         return {
             "review": review,
-            "approved": review.upper().startswith("APPROVE"),
+            "approved": bool(re.match(r"^\W*APPROVE", review, re.IGNORECASE)),
             "revision_count": state.get("revision_count", 0) + 1,
         }
 

@@ -1,8 +1,9 @@
+import logging
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from langchain_core.language_models import BaseChatModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -51,13 +52,17 @@ def create_app(settings: Settings | None = None, llm: BaseChatModel | None = Non
         graph=Depends(get_graph),
         session: Session = Depends(get_session),
     ) -> Trip:
-        plan = plan_trip(
-            graph,
-            destination=request.destination,
-            days=request.days,
-            budget_usd=request.budget_usd,
-            interests=request.interests,
-        )
+        try:
+            plan = plan_trip(
+                graph,
+                destination=request.destination,
+                days=request.days,
+                budget_usd=request.budget_usd,
+                interests=request.interests,
+            )
+        except Exception as exc:
+            logging.getLogger(__name__).exception("Trip planning failed")
+            raise HTTPException(status_code=502, detail="Planning service unavailable") from exc
         trip = Trip(
             destination=request.destination,
             days=request.days,
@@ -71,8 +76,13 @@ def create_app(settings: Settings | None = None, llm: BaseChatModel | None = Non
         return trip
 
     @app.get("/trips", response_model=list[TripOut])
-    def list_trips(session: Session = Depends(get_session)) -> list[Trip]:
-        return list(session.scalars(select(Trip).order_by(Trip.id.desc())))
+    def list_trips(
+        limit: int = Query(50, ge=1, le=100),
+        offset: int = Query(0, ge=0),
+        session: Session = Depends(get_session),
+    ) -> list[Trip]:
+        stmt = select(Trip).order_by(Trip.id.desc()).limit(limit).offset(offset)
+        return list(session.scalars(stmt))
 
     @app.get("/trips/{trip_id}", response_model=TripOut)
     def get_trip(trip_id: int, session: Session = Depends(get_session)) -> Trip:

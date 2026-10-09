@@ -60,3 +60,40 @@ def test_planning_returns_503_without_groq_key(tmp_path):
 
     assert response.status_code == 503
     assert "GROQ_API_KEY" in response.json()["detail"]
+
+
+class _FailingModel(FakeListChatModel):
+    def _call(self, *args, **kwargs):
+        raise RuntimeError("upstream down")
+
+
+def test_planning_failure_returns_502(tmp_path):
+    app = create_app(settings=_settings(tmp_path), llm=_FailingModel(responses=["x"]))
+    with TestClient(app) as test_client:
+        response = test_client.post(
+            "/trips", json={"destination": "Kyoto", "days": 2, "budget_usd": 800}
+        )
+
+    assert response.status_code == 502
+    assert response.json()["detail"] == "Planning service unavailable"
+
+
+def test_overlong_interest_is_rejected(client):
+    response = client.post(
+        "/trips",
+        json={"destination": "Kyoto", "days": 2, "budget_usd": 800, "interests": ["x" * 51]},
+    )
+
+    assert response.status_code == 422
+
+
+def test_list_trips_respects_limit_and_offset(client):
+    for _ in range(3):
+        client.post("/trips", json={"destination": "Kyoto", "days": 2, "budget_usd": 800})
+    ids = [trip["id"] for trip in client.get("/trips").json()]
+
+    assert [t["id"] for t in client.get("/trips?limit=2").json()] == ids[:2]
+    assert [t["id"] for t in client.get("/trips?limit=2&offset=2").json()] == ids[2:]
+    assert client.get("/trips?limit=0").status_code == 422
+    assert client.get("/trips?limit=101").status_code == 422
+    assert client.get("/trips?offset=-1").status_code == 422
