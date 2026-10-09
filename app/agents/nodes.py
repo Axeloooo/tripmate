@@ -1,5 +1,6 @@
 import re
 from collections.abc import Callable
+from typing import Any
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -40,7 +41,7 @@ def _trip_brief(state: TripState) -> str:
     )
 
 
-def make_nodes(llm: BaseChatModel) -> dict[str, Callable[[TripState], dict]]:
+def make_nodes(llm: BaseChatModel) -> dict[str, Callable[..., dict[str, Any]]]:
     def research_agent(state: TripState) -> dict:
         return {"research": _ask(llm, RESEARCH_SYSTEM, _trip_brief(state))}
 
