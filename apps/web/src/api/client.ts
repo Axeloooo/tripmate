@@ -19,7 +19,7 @@ export interface MockClientOptions {
 }
 
 export function createMockClient({ frameDelayMs = 1100 }: MockClientOptions = {}): TripApi {
-  const trips = [...MOCK_TRIPS];
+  const trips = MOCK_TRIPS.map((t) => ({ ...t }));
   let nextId = Math.max(...trips.map((t) => t.id)) + 1;
 
   return {
@@ -56,7 +56,10 @@ export function createMockClient({ frameDelayMs = 1100 }: MockClientOptions = {}
         onUpdate(snapshot);
         if (snapshot.complete) {
           const trip = trips.find((t) => t.id === id);
-          if (trip) trip.status = "ready";
+          if (trip) {
+            trip.status = "ready";
+            if (trip.itinerary.length === 0) trip.itinerary = MOCK_TRIPS[0].itinerary;
+          }
         } else {
           timer = setTimeout(step, frameDelayMs);
         }

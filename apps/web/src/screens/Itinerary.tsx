@@ -65,7 +65,7 @@ export function Itinerary({ api, id }: { api: TripApi; id: number }) {
             </p>
           )}
           {data.itinerary.map((day, i) => (
-            <section key={day.label} aria-labelledby={`day-${i}`}>
+            <section key={i} aria-labelledby={`day-${i}`}>
               <h2 className="day-label" id={`day-${i}`}>
                 {day.label}
               </h2>

@@ -4,7 +4,7 @@ Multi-agent trip planner: FastAPI + LangGraph (Groq) + PostgreSQL. Python 3.13.
 
 ## Layout
 
-Monorepo. `apps/api` is the FastAPI backend (app code, tests, requirements, `pyproject.toml`, docker-compose, `.env.example`). `apps/web` is the Vite + React + TypeScript UI (Waywise templates on mock data) and `packages/` for shared code. Repo-wide tooling stays at the root: `package.json`, `.releaserc.json`, `.prettierrc`, `.pre-commit-config.yaml`, `.cz.toml` (commitizen), `.github/`, `.claude/`, `scripts/`.
+Monorepo. `apps/api` is the FastAPI backend (app code, tests, requirements, `pyproject.toml`, docker-compose, `.env.example`). `apps/web` is the Vite + React + TypeScript UI (Waywise templates on mock data), and `packages/` is reserved for shared code. Repo-wide tooling stays at the root: `package.json`, `.releaserc.json`, `.prettierrc`, `.pre-commit-config.yaml`, `.cz.toml` (commitizen), `.github/`, `.claude/`, `scripts/`.
 
 ## Commands
 

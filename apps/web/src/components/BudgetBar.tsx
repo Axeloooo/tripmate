@@ -20,6 +20,11 @@ export function BudgetBar({ spentUsd, budgetUsd }: { spentUsd: number; budgetUsd
         aria-valuemin={0}
         aria-valuemax={budgetUsd}
         aria-valuenow={Math.min(spentUsd, budgetUsd)}
+        aria-valuetext={
+          over
+            ? `${formatUsd(spentUsd - budgetUsd)} over budget`
+            : `${formatUsd(budgetUsd - spentUsd)} left`
+        }
       >
         <div className="budget__fill" style={{ width: `${pct}%` }} />
       </div>

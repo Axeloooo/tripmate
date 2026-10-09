@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { TripApi } from "../api/client";
 import type { AgentStatus, ProgressSnapshot } from "../api/types";
 import { LinkButton } from "../components/Button";
+import { useAsync } from "../useAsync";
 import { Sign, SignStack, type SignTone } from "../components/Sign";
 
 const TONE: Record<AgentStatus, SignTone> = {
@@ -19,9 +20,23 @@ const LABEL: Record<AgentStatus, string> = {
 };
 
 export function Progress({ api, id }: { api: TripApi; id: number }) {
+  const trip = useAsync(() => api.getTrip(id), [api, id]);
   const [snapshot, setSnapshot] = useState<ProgressSnapshot | null>(null);
 
-  useEffect(() => api.watchProgress(id, setSnapshot), [api, id]);
+  const found = trip.status === "ready";
+  useEffect(() => (found ? api.watchProgress(id, setSnapshot) : undefined), [api, id, found]);
+
+  if (trip.status === "error")
+    return (
+      <>
+        <p className="status status--error" role="alert">
+          {trip.message}
+        </p>
+        <LinkButton href="#/trips">Back to your trips</LinkButton>
+      </>
+    );
+
+  const working = snapshot?.agents.find((a) => a.status === "working");
 
   return (
     <>
@@ -29,7 +44,10 @@ export function Progress({ api, id }: { api: TripApi; id: number }) {
       <p className="page__lede">
         Four agents plan your trip in turn. The reviewer can send the plan back for another pass.
       </p>
-      <div aria-live="polite">
+      <p className="visually-hidden" role="status">
+        {snapshot?.complete ? "Plan ready" : working ? `${working.name} agent working` : ""}
+      </p>
+      <div>
         {snapshot ? (
           <SignStack label="Crew progress">
             {snapshot.agents.map((a) => (

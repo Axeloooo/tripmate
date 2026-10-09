@@ -66,3 +66,11 @@ describe("app", () => {
     expect(await screen.findByText("Kyoto")).toBeInTheDocument();
   });
 });
+
+describe("progress", () => {
+  it("shows an error for an unknown trip", async () => {
+    window.location.hash = "#/trips/999/progress";
+    render(<App client={createMockClient()} />);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/not found/i);
+  });
+});

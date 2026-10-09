@@ -10,6 +10,7 @@ interface Errors {
   destination?: string;
   days?: string;
   budget?: string;
+  interests?: string;
   submit?: string;
 }
 
@@ -28,12 +29,21 @@ export function NewTrip({ api }: { api: TripApi }) {
     const budgetUsd = Number(budget);
     if (destination.trim().length < 2)
       next.destination = "Enter a city or region, at least 2 characters.";
+    if (destination.trim().length > 200)
+      next.destination = "Keep the destination under 200 characters.";
+    if (parseInterests(interests).some((i) => i.length > 50))
+      next.interests = "Keep each interest under 50 characters.";
     if (!Number.isInteger(dayCount) || dayCount < 1 || dayCount > 14)
       next.days = "Enter 1 to 14 days.";
     if (!Number.isInteger(budgetUsd) || budgetUsd < 100 || budgetUsd > 100_000)
       next.budget = "Enter a budget from $100 to $100,000.";
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(next).length > 0) {
+      requestAnimationFrame(() =>
+        document.querySelector<HTMLInputElement>('form [aria-invalid="true"]')?.focus(),
+      );
+      return;
+    }
 
     setBusy(true);
     try {
@@ -89,7 +99,8 @@ export function NewTrip({ api }: { api: TripApi }) {
         </div>
         <TextField
           label="Interests"
-          hint="Separate with commas. Optional."
+          hint="Separate with commas. Up to 10. Optional."
+          error={errors.interests}
           value={interests}
           onChange={(e) => setInterests(e.target.value)}
           placeholder="food, architecture"

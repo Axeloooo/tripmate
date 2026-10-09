@@ -199,7 +199,7 @@ a.sign:hover {
   font-size: var(--text-lg);
   color: var(--ink);
   background: var(--sign);
-  border: 2px solid var(--line);
+  border: 2px solid var(--ink-dim);
   border-left: var(--edge-width) solid var(--edge);
   border-radius: var(--radius);
   padding: var(--space-3) var(--space-4);

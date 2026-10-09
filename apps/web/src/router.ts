@@ -8,7 +8,7 @@ export type Route =
   | { name: "missing" };
 
 export function parseRoute(hash: string): Route {
-  const path = hash.replace(/^#\/?/, "");
+  const path = hash.replace(/^#\/?/, "").replace(/\/$/, "");
   if (path === "") return { name: "new" };
   if (path === "trips") return { name: "trips" };
   const match = /^trips\/(\d+)(\/progress)?$/.exec(path);

@@ -18,7 +18,6 @@ export function useAsync<T>(load: () => Promise<T>, deps: unknown[]): AsyncState
     return () => {
       live = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   return state;
 }
