@@ -2,23 +2,37 @@
 
 Multi-agent trip planner: FastAPI + LangGraph (Groq) + PostgreSQL. Python 3.13.
 
+## Layout
+
+Monorepo. `apps/api` is the FastAPI backend (app code, tests, requirements, `pyproject.toml`, docker-compose, `.env.example`). `apps/web` is reserved for a future React + TypeScript UI and `packages/` for shared code. Repo-wide tooling stays at the root: `package.json`, `.releaserc.json`, `.prettierrc`, `.pre-commit-config.yaml`, `.cz.toml` (commitizen), `.github/`, `.claude/`, `scripts/`.
+
 ## Commands
 
+Root:
+
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
 pre-commit install                  # installs pre-commit, commit-msg and pre-push hooks
 npm install                         # prettier and semantic-release
+npx prettier --write .
+```
+
+API (run from `apps/api`):
+
+```bash
+cd apps/api
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 docker compose up -d db             # PostgreSQL on localhost:5432
 pytest
 black .
 ruff check --fix .                  # lint only, never ruff format
 mypy
-npx prettier --write .
 ```
 
 ## Architecture
+
+All paths below are under `apps/api/`.
 
 - `create_app` factory builds the FastAPI app; the LangGraph graph is built lazily on first use and cached.
 - Planning returns 503 when no `GROQ_API_KEY` is set and 502 when planning fails.
@@ -32,7 +46,7 @@ The superpowers, frontend-design and Figma skills are vendored in `.claude/skill
 
 ## Conventions
 
-- Conventional Commits. Types and release effect: `feat` minor, `fix` and `infra` patch, `docs`, `chore`, `test`, `refactor`, `ci` no release. Breaking changes (`!`) are major. Enforced by commitizen (`pyproject.toml`) locally and in CI.
+- Conventional Commits. Types and release effect: `feat` minor, `fix` and `infra` patch, `docs`, `chore`, `test`, `refactor`, `ci` no release. Breaking changes (`!`) are major. Enforced by commitizen (`.cz.toml`) locally and in CI.
 - Branches: `feature|fix|docs|infra/short-description`, lowercase.
 - Never commit directly to `main` or `devel`.
 - Claude must never be author or co-author of a commit: no `Co-Authored-By` or `Claude-Session` trailers, and the git author and committer are the repository owner. A commit-msg hook enforces the trailer rule.
