@@ -31,6 +31,7 @@ npx prettier --write .
 - Conventional Commits. Types and release effect: `feat` minor, `fix` and `infra` patch, `docs`, `chore`, `test`, `refactor`, `ci` no release. Breaking changes (`!`) are major. Enforced by commitizen (`pyproject.toml`) locally and in CI.
 - Branches: `feature|fix|docs|infra/short-description`, lowercase.
 - Never commit directly to `main` or `devel`.
+- Claude must never be author or co-author of a commit: no `Co-Authored-By` or `Claude-Session` trailers, and the git author and committer are the repository owner. A commit-msg hook enforces the trailer rule.
 - Python is formatted with black and linted with ruff (line length 100). Do not use ruff-format.
 - TypeScript, JS, JSON, Markdown and YAML are formatted with prettier.
 

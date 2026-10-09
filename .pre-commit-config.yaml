@@ -52,6 +52,11 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+      - id: no-ai-attribution
+        name: no AI attribution in commit message
+        entry: scripts/check-commit-message.sh
+        language: system
+        stages: [commit-msg]
       - id: branch-name
         name: branch name
         entry: scripts/check-branch-name.sh
