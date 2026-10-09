@@ -4,7 +4,7 @@ Multi-agent trip planner: FastAPI + LangGraph (Groq) + PostgreSQL. Python 3.13.
 
 ## Layout
 
-Monorepo. `apps/api` is the FastAPI backend (app code, tests, requirements, `pyproject.toml`, docker-compose, `.env.example`). `apps/web` is reserved for a future React + TypeScript UI and `packages/` for shared code. Repo-wide tooling stays at the root: `package.json`, `.releaserc.json`, `.prettierrc`, `.pre-commit-config.yaml`, `.cz.toml` (commitizen), `.github/`, `.claude/`, `scripts/`.
+Monorepo. `apps/api` is the FastAPI backend (app code, tests, requirements, `pyproject.toml`, docker-compose, `.env.example`). `apps/web` is the Vite + React + TypeScript UI (Waywise templates on mock data), and `packages/` is reserved for shared code. Repo-wide tooling stays at the root: `package.json`, `.releaserc.json`, `.prettierrc`, `.pre-commit-config.yaml`, `.cz.toml` (commitizen), `.github/`, `.claude/`, `scripts/`.
 
 ## Commands
 
@@ -15,6 +15,8 @@ pre-commit install                  # installs pre-commit, commit-msg and pre-pu
 npm install                         # prettier and semantic-release
 npx prettier --write .
 ```
+
+Web (run from `apps/web`): `npm install`, `npm run dev`, `npm test`, `npm run build`. Design tokens live in `src/styles/tokens.css`, the product name in `src/config.ts`, and all backend access behind `TripApi` in `src/api/client.ts` (mock only until wired to `apps/api`).
 
 API (run from `apps/api`):
 

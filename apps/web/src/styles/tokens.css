@@ -1,0 +1,33 @@
+/* Waywise design tokens: airport wayfinding. White on blue, one yellow edge, one red for decisions. */
+:root {
+  color-scheme: dark;
+
+  --wall: #10294a;
+  --sign: #0a1e38;
+  --edge: #f7c948;
+  --hold: #f25f5c;
+  --ink: #ffffff;
+  --ink-dim: #c3cfdf;
+  --line: #27456f;
+
+  --font: "Atkinson Hyperlegible", system-ui, sans-serif;
+
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.625rem;
+  --text-time: clamp(1.5rem, 4.5vw, 2.25rem);
+  --text-display: clamp(2rem, 6vw, 3.5rem);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 40px;
+
+  --radius: 8px;
+  --edge-width: 8px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --measure: 760px;
+}
