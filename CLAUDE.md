@@ -42,7 +42,7 @@ All paths below are under `apps/api/`.
 
 ## Skills
 
-The superpowers, frontend-design and Figma skills are vendored in `.claude/skills/` (see its README for sources and licenses). They are third-party: do not edit them or run formatters on them.
+The superpowers and frontend-design skills are vendored in `.claude/skills/` (see its README for sources and licenses). They are third-party: do not edit them or run formatters on them.
 
 ## Conventions
 
