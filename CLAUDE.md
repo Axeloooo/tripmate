@@ -39,6 +39,8 @@ npx prettier --write .
 1. Work on `feature/*` (or `fix/*`, `docs/*`, `infra/*`) and open a PR into `devel`.
 2. When ready to release, open a release PR `devel` -> `main` and merge it with a MERGE COMMIT, not squash, so the conventional commits reach `main`.
 3. `release.yml` runs semantic-release on `main`: tags `vX.Y.Z`, updates `CHANGELOG.md`, creates the GitHub release.
-4. Merge `main` back into `devel` to pick up the changelog commit.
+4. Merge `main` back into `devel` (PR `main` -> `devel`, allowed by the branch-name check) to pick up the changelog commit. The release commit has no `[skip ci]`; pushes made with `GITHUB_TOKEN` do not trigger workflows anyway.
 
-The first release will be v1.0.0 unless a `v0.1.0` tag is pushed first. If PRs into `devel` are squash-merged, the PR title must be a valid conventional commit.
+The first release will be v1.0.0 unless a `v0.1.0` tag is pushed first. If PRs into `devel` are squash-merged, the PR title must be a valid conventional commit; CI enforces this with `cz check` on the PR title (re-run on title edits).
+
+If `main` is protected, the GitHub Actions bot must be allowed to bypass the protection (or use a PAT instead of `GITHUB_TOKEN`) so semantic-release can push the changelog commit.
