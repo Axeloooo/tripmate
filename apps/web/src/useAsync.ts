@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-export type AsyncState<T> =
+export type AsyncState<T> = (
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "ready"; data: T };
+  | { status: "ready"; data: T }
+) & {
+  /** Loads again, showing the loading state. */
+  reload: () => void;
+};
 
 export function useAsync<T>(load: () => Promise<T>, deps: unknown[]): AsyncState<T> {
-  const [state, setState] = useState<AsyncState<T>>({ status: "loading" });
+  const [state, setState] = useState<
+    { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: T }
+  >({ status: "loading" });
+  const [attempt, setAttempt] = useState(0);
+  const reload = useCallback(() => setAttempt((n) => n + 1), []);
   useEffect(() => {
     let live = true;
     setState({ status: "loading" });
@@ -18,6 +26,6 @@ export function useAsync<T>(load: () => Promise<T>, deps: unknown[]): AsyncState
     return () => {
       live = false;
     };
-  }, deps);
-  return state;
+  }, [...deps, attempt]);
+  return { ...state, reload };
 }

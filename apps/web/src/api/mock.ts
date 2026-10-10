@@ -1,4 +1,5 @@
-import type { AgentProgress, ProgressSnapshot, Trip } from "./types";
+import { AGENTS } from "./agents";
+import type { ProgressSnapshot, Trip } from "./types";
 
 export const MOCK_TRIPS: Trip[] = [
   {
@@ -119,13 +120,6 @@ export const MOCK_TRIPS: Trip[] = [
     createdAt: "2026-09-12T11:05:00Z",
     itinerary: [],
   },
-];
-
-const AGENTS: Omit<AgentProgress, "status">[] = [
-  { id: "research", name: "Research", note: "Finds flights, stays and places to eat" },
-  { id: "itinerary", name: "Itinerary", note: "Orders the days and sets the times" },
-  { id: "budget", name: "Budget", note: "Prices every stop against your limit" },
-  { id: "reviewer", name: "Reviewer", note: "Checks the plan and sends it back if it falls short" },
 ];
 
 /** Progress frames, in order. The last frame is the finished plan. */

@@ -19,15 +19,23 @@ export interface ItineraryDay {
   stops: Stop[];
 }
 
+export type TripStatus = "planning" | "ready" | "failed";
+
 export interface Trip {
   id: number;
   destination: string;
   dayCount: number;
   budgetUsd: number;
   interests: string[];
-  status: "planning" | "ready";
+  status: TripStatus;
   createdAt: string;
   itinerary: ItineraryDay[];
+  /** Why planning failed. Set when `status` is "failed". */
+  error?: string;
+  /** The itinerary as the agent wrote it. Shown when it could not be laid out as a board. */
+  notes?: string;
+  /** Where each agent is, while the trip is planning. */
+  agents?: Partial<Record<AgentId, AgentStatus>>;
 }
 
 export interface TripRequest {
@@ -51,4 +59,8 @@ export interface AgentProgress {
 export interface ProgressSnapshot {
   agents: AgentProgress[];
   complete: boolean;
+  /** Set when planning failed or the trip could not be fetched. */
+  error?: string;
+  /** True when trying again can help, such as a lost connection. False when planning failed. */
+  retryable?: boolean;
 }

@@ -691,6 +691,25 @@
   color: var(--hold);
 }
 
+/* ---------- Actions and notes ---------- */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.notes {
+  margin: 0;
+  padding: var(--space-4);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+  background: var(--row);
+  border-radius: var(--radius);
+}
+
 /* ---------- Status ---------- */
 .status {
   color: var(--ink-dim);

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { TripApi } from "../api/client";
 import type { AgentStatus, ProgressSnapshot } from "../api/types";
-import { LinkButton } from "../components/Button";
+import { Button, LinkButton } from "../components/Button";
+import { LoadError } from "../components/LoadError";
 import { Sign, SignStack, type SignTone } from "../components/Sign";
 import { useAsync } from "../useAsync";
 
@@ -23,17 +24,20 @@ export function Progress({ api, id }: { api: TripApi; id: number }) {
   const trip = useAsync(() => api.getTrip(id), [api, id]);
   const [snapshot, setSnapshot] = useState<ProgressSnapshot | null>(null);
 
+  const [attempt, setAttempt] = useState(0);
+
   const found = trip.status === "ready";
-  useEffect(() => (found ? api.watchProgress(id, setSnapshot) : undefined), [api, id, found]);
+  useEffect(() => {
+    if (!found) return;
+    setSnapshot(null);
+    return api.watchProgress(id, setSnapshot);
+  }, [api, id, found, attempt]);
 
   if (trip.status === "error")
     return (
       <div className="stack">
-        <h1>No row for this trip</h1>
-        <p className="status status--error" role="alert">
-          {trip.message}
-        </p>
-        <LinkButton href="#/trips">Back to your trips</LinkButton>
+        <h1>Can&rsquo;t show this trip</h1>
+        <LoadError message={trip.message} onRetry={trip.reload} />
       </div>
     );
 
@@ -42,7 +46,13 @@ export function Progress({ api, id }: { api: TripApi; id: number }) {
   return (
     <div className="stack">
       <header className="page__head">
-        <h1>{snapshot?.complete ? "Your plan is ready" : "The crew is on it"}</h1>
+        <h1>
+          {snapshot?.complete
+            ? "Your plan is ready"
+            : snapshot?.error
+              ? "The crew hit a problem"
+              : "The crew is on it"}
+        </h1>
         {found && (
           <p className="page__meta">
             Plan {trip.data.id} · {trip.data.destination}
@@ -52,6 +62,11 @@ export function Progress({ api, id }: { api: TripApi; id: number }) {
       <p className="page__lede">
         Four agents plan your trip in turn. The reviewer can send the plan back for another pass.
       </p>
+      {snapshot?.error && (
+        <p className="status status--error" role="alert">
+          {snapshot.error}
+        </p>
+      )}
       <p className="visually-hidden" role="status">
         {snapshot?.complete ? "Plan ready" : working ? `${working.name} agent working` : ""}
       </p>
@@ -76,6 +91,16 @@ export function Progress({ api, id }: { api: TripApi; id: number }) {
         )}
       </div>
       {snapshot?.complete && <LinkButton href={`#/trips/${id}`}>See the itinerary</LinkButton>}
+      {snapshot?.error && (
+        <div className="actions">
+          {snapshot.retryable && (
+            <Button onClick={() => setAttempt((n) => n + 1)}>Try again</Button>
+          )}
+          <LinkButton quiet href="#/">
+            Plan another trip
+          </LinkButton>
+        </div>
+      )}
     </div>
   );
 }

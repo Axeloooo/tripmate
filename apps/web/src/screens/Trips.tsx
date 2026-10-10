@@ -1,8 +1,15 @@
 import type { CSSProperties } from "react";
 import type { TripApi } from "../api/client";
-import { LinkButton } from "../components/Button";
+import type { Trip } from "../api/types";
+import { Button, LinkButton } from "../components/Button";
 import { formatDate, formatUsd } from "../lib";
 import { useAsync } from "../useAsync";
+
+const STATUS_LABEL: Record<Trip["status"], string> = {
+  ready: "Ready",
+  planning: "Planning",
+  failed: "Failed",
+};
 
 export function Trips({ api }: { api: TripApi }) {
   const trips = useAsync(() => api.listTrips(), [api]);
@@ -19,9 +26,14 @@ export function Trips({ api }: { api: TripApi }) {
       </header>
       {trips.status === "loading" && <p className="status">Loading your trips.</p>}
       {trips.status === "error" && (
-        <p className="status status--error" role="alert">
-          {trips.message}
-        </p>
+        <>
+          <p className="status status--error" role="alert">
+            {trips.message}
+          </p>
+          <div className="actions">
+            <Button onClick={trips.reload}>Try again</Button>
+          </div>
+        </>
       )}
       {trips.status === "ready" &&
         (trips.data.length === 0 ? (
@@ -68,7 +80,7 @@ export function Trips({ api }: { api: TripApi }) {
                       <span className="trow__days">{t.dayCount} days</span>
                       <span className="trow__budget">{formatUsd(t.budgetUsd)}</span>
                       <span className="trow__date">{formatDate(t.createdAt)}</span>
-                      <span className="trow__status">{ready ? "Ready" : "Planning"}</span>
+                      <span className="trow__status">{STATUS_LABEL[t.status]}</span>
                     </a>
                   </li>
                 );

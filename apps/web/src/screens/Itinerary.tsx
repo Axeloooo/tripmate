@@ -2,6 +2,7 @@ import type { TripApi } from "../api/client";
 import type { Stop, StopState } from "../api/types";
 import { BudgetBar } from "../components/BudgetBar";
 import { LinkButton } from "../components/Button";
+import { LoadError } from "../components/LoadError";
 import { Sign, SignStack, type SignTone } from "../components/Sign";
 import { formatUsd } from "../lib";
 import { useAsync } from "../useAsync";
@@ -28,11 +29,8 @@ export function Itinerary({ api, id }: { api: TripApi; id: number }) {
   if (trip.status === "error")
     return (
       <div className="stack">
-        <h1>No row for this trip</h1>
-        <p className="status status--error" role="alert">
-          {trip.message}
-        </p>
-        <LinkButton href="#/trips">Back to your trips</LinkButton>
+        <h1>Can&rsquo;t show this trip</h1>
+        <LoadError message={trip.message} onRetry={trip.reload} />
       </div>
     );
 
@@ -50,10 +48,25 @@ export function Itinerary({ api, id }: { api: TripApi; id: number }) {
           {data.interests.length > 0 && ` · ${data.interests.join(", ")}`}
         </p>
       </header>
-      {data.itinerary.length === 0 ? (
+      {data.status === "planning" ? (
         <>
           <p className="status">The crew is still planning this trip.</p>
           <LinkButton href={`#/trips/${data.id}/progress`}>Watch the crew</LinkButton>
+        </>
+      ) : data.status === "failed" ? (
+        <>
+          <p className="status status--error" role="alert">
+            {data.error ?? "Planning failed."}
+          </p>
+          <LinkButton href="#/">Plan another trip</LinkButton>
+        </>
+      ) : data.itinerary.length === 0 ? (
+        <>
+          <p className="status">
+            The crew finished, but the plan did not come back in a form the board can show.
+          </p>
+          {data.notes && <pre className="notes">{data.notes}</pre>}
+          <LinkButton href="#/">Plan another trip</LinkButton>
         </>
       ) : (
         <>

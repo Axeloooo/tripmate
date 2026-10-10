@@ -1,9 +1,13 @@
+import { createHttpClient } from "./http";
 import { MOCK_TRIPS, progressFrames } from "./mock";
 import type { ProgressSnapshot, Trip, TripRequest } from "./types";
 
+/** Same-origin path that nginx (or the Vite dev proxy) forwards to apps/api. */
+export const DEFAULT_API_URL = "/api";
+
 /**
- * Everything the UI needs from the backend. Screens depend on this interface only, so wiring
- * apps/api later means writing one more implementation and changing `createApiClient`.
+ * Everything the UI needs from the backend. Screens depend on this interface only. `http.ts`
+ * implements it against apps/api and `createMockClient` implements it on canned data.
  */
 export interface TripApi {
   listTrips(): Promise<Trip[]>;
@@ -70,7 +74,12 @@ export function createMockClient({ frameDelayMs = 1100 }: MockClientOptions = {}
   };
 }
 
-/** The one place that decides which implementation the app uses. */
+/**
+ * The one place that decides which implementation the app uses. The real API is the default.
+ * The mock client is for development and tests only: set `VITE_CLIENT=mock` to use it.
+ */
 export function createApiClient(): TripApi {
-  return createMockClient();
+  // Read straight off import.meta.env so a production build drops the mock client and its data.
+  if (import.meta.env.VITE_CLIENT === "mock") return createMockClient();
+  return createHttpClient({ baseUrl: import.meta.env.VITE_API_URL || DEFAULT_API_URL });
 }

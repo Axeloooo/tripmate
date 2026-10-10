@@ -15,9 +15,17 @@ export function Button({ quiet, className, children, ...rest }: ButtonProps) {
   );
 }
 
-export function LinkButton({ href, children }: { href: string; children: string }) {
+export function LinkButton({
+  href,
+  children,
+  quiet,
+}: {
+  href: string;
+  children: string;
+  quiet?: boolean;
+}) {
   return (
-    <a className="button" href={href}>
+    <a className={quiet ? "button button--quiet" : "button"} href={href}>
       {children}
     </a>
   );
