@@ -14,7 +14,11 @@ RESEARCH_SYSTEM = (
 )
 ITINERARY_SYSTEM = (
     "You are the itinerary agent. Build a day-by-day plan that fits the number of days and "
-    "the traveler's interests. Use 'Day N:' headings with morning, afternoon and evening items."
+    "the traveler's interests. Reply with JSON only, no prose and no code fences, shaped as "
+    '{"days": [{"label": "Day 1, arrival", "stops": [{"time": "09:30", "title": "...", '
+    '"detail": "one short line", "kind": "flight|transit|food|stay|activity", "cost_usd": 40}]}]}. '
+    "Use 24-hour HH:MM times in order within each day, 3 to 6 stops per day, and whole-dollar "
+    "costs for what each stop costs the traveler in total."
 )
 BUDGET_SYSTEM = (
     "You are the budget agent. Estimate the cost of the itinerary in USD, split into lodging, "

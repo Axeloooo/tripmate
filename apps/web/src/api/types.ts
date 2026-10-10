@@ -25,10 +25,21 @@ export interface Trip {
   dayCount: number;
   budgetUsd: number;
   interests: string[];
-  status: "planning" | "ready";
+  status: TripStatus;
   createdAt: string;
   itinerary: ItineraryDay[];
+  /** Set when the itinerary agent's reply could not be read as stops; shown as plain text. */
+  itineraryText?: string;
+  researchNotes?: string;
+  budgetNotes?: string;
+  review?: { approved: boolean; text: string; rounds: number };
+  /** Which agents have finished and which is working now, while the plan is being made. */
+  progress?: { completed: string[]; current: string | null };
+  /** Why planning failed, when `status` is "failed". */
+  error?: string;
 }
+
+export type TripStatus = "planning" | "ready" | "failed";
 
 export interface TripRequest {
   destination: string;
@@ -51,4 +62,6 @@ export interface AgentProgress {
 export interface ProgressSnapshot {
   agents: AgentProgress[];
   complete: boolean;
+  /** Set when planning stopped without a plan. */
+  error?: string;
 }
