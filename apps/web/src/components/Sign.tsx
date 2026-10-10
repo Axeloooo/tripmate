@@ -1,95 +1,123 @@
-import type { ReactNode } from "react";
-import { ArrowGlyph, Pictogram, type PictogramName } from "./Pictogram";
+import type { CSSProperties, ReactNode } from "react";
 
 export type SignTone = "default" | "now" | "decision" | "done" | "wait";
 
 export interface SignProps {
-  /** Shown first, in large figures. Omit for signs that have no clock time. */
+  /** Clock time such as "13:00", drawn as split-flap digits. Omit for rows without one. */
   time?: string;
-  /** Gate-style label shown in the time column when there is no clock time. */
+  /** A step or gate number shown in the time column when there is no clock time. */
   gate?: string;
-  icon?: PictogramName;
   title: ReactNode;
   detail?: ReactNode;
+  /** Which agent checked this row. */
+  by?: string;
   trailing?: ReactNode;
+  /** Overrides the status word that the tone would give. */
+  status?: string;
   tone?: SignTone;
-  href?: string;
-  id?: string;
+  /** Position in the board, used to stagger the one-time flip on load. */
+  index?: number;
 }
 
-const TONE_LABEL: Partial<Record<SignTone, string>> = {
-  now: "Now. ",
-  decision: "Needs your decision. ",
-  done: "Done. ",
+const TONE_STATUS: Record<SignTone, string> = {
+  default: "On time",
+  now: "Now",
+  decision: "Hold",
+  done: "Done",
+  wait: "Waiting",
 };
 
+function Flaps({ value, index = 0 }: { value: string; index?: number }) {
+  return (
+    <span className="flaps" aria-hidden="true">
+      {value.split("").map((ch, i) =>
+        ch === ":" ? (
+          <span className="flaps__colon" key={i}>
+            :
+          </span>
+        ) : (
+          <span
+            className="flap"
+            key={i}
+            style={{ "--flip": `${index * 90 + i * 40}ms` } as CSSProperties}
+          >
+            {ch}
+          </span>
+        ),
+      )}
+    </span>
+  );
+}
+
 /**
- * One mounted wayfinding plate: time, pictogram tile, text, price, and an arrow.
- * The tone is also spoken and drawn as a shape, so colour is never the only signal.
+ * One row on the board: time in split-flap digits, the item, who checked it, its price and its
+ * status. The status is a word, so colour is never the only signal.
  */
 export function Sign({
   time,
   gate,
-  icon,
   title,
   detail,
+  by,
   trailing,
+  status,
   tone = "default",
-  href,
-  id,
+  index = 0,
 }: SignProps) {
-  const className = ["sign", `sign--${tone}`, !time && !gate && "sign--no-time"]
-    .filter(Boolean)
-    .join(" ");
-  const tile = tone === "decision" ? "decision" : icon;
-  const arrow =
-    tone === "now" ? (
-      <ArrowGlyph direction="up" />
-    ) : tone === "default" && href ? (
-      <ArrowGlyph />
-    ) : null;
-  const body = (
-    <>
-      {time && (
-        <span className="sign__time">
-          {time}
-          {tone === "done" && (
-            <svg className="sign__check" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="3" />
-            </svg>
-          )}
-        </span>
-      )}
-      {!time && gate && <span className="sign__gate">{gate}</span>}
-      {tile && (
-        <span className="sign__tile">
-          <Pictogram name={tile} />
-        </span>
-      )}
-      <span className="sign__text">
-        <span className="visually-hidden">{TONE_LABEL[tone]}</span>
-        <span className="sign__title">{title}</span>
-        {detail && <span className="sign__detail">{detail}</span>}
-      </span>
-      {trailing && <span className="sign__trailing">{trailing}</span>}
-      <span className="sign__arrow">{arrow}</span>
-    </>
-  );
-  return href ? (
-    <a className={className} href={href} id={id}>
-      {body}
-    </a>
-  ) : (
-    <div className={className} id={id}>
-      {body}
+  return (
+    <div className={`row row--${tone}`}>
+      <div className="row__time">
+        {time ? (
+          <>
+            <span className="visually-hidden">{time}</span>
+            <Flaps value={time} index={index} />
+          </>
+        ) : gate ? (
+          <>
+            <span className="visually-hidden">{gate}</span>
+            <Flaps value={gate} index={index} />
+          </>
+        ) : null}
+      </div>
+      <div className="row__item">
+        {tone === "decision" && <span className="visually-hidden">Needs your decision. </span>}
+        <span className="row__title">{title}</span>
+        {detail && <span className="row__detail">{detail}</span>}
+      </div>
+      <div className="row__by">{by}</div>
+      <div className="row__cost">{trailing}</div>
+      <div className="row__status">{status ?? TONE_STATUS[tone]}</div>
     </div>
   );
 }
 
-export function SignStack({ label, children }: { label: string; children: ReactNode }) {
+const DEFAULT_HEAD = ["Time", "Item", "Checked by", "Cost", "Status"];
+
+export function SignStack({
+  label,
+  head,
+  children,
+}: {
+  label: string;
+  /** Show the column labels. Pass five labels to rename them: time, item, checked by, cost, status. */
+  head?: boolean | string[];
+  children: ReactNode;
+}) {
+  const labels = Array.isArray(head) ? head : DEFAULT_HEAD;
   return (
-    <ul className="sign-stack" aria-label={label}>
-      {children}
-    </ul>
+    <div className="board">
+      {head && (
+        <div className="row row--head" aria-hidden="true">
+          <div className="row__time">{labels[0]}</div>
+          <div className="row__item">{labels[1]}</div>
+          <div className="row__by">{labels[2]}</div>
+          <div className="row__cost">{labels[3]}</div>
+          <div className="row__status">{labels[4]}</div>
+        </div>
+      )}
+      <ul className="board__rows" aria-label={label}>
+        {children}
+      </ul>
+    </div>
   );
 }

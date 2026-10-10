@@ -6,10 +6,10 @@
 
 body {
   margin: 0;
-  background: var(--wall);
+  background: var(--board);
   color: var(--ink);
   font-family: var(--font);
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   line-height: 1.45;
 }
 
@@ -27,9 +27,12 @@ ul {
 }
 
 h1 {
+  font-family: var(--font-board);
+  font-weight: 800;
   font-size: var(--text-h1);
-  line-height: 1.1;
-  letter-spacing: -0.015em;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   text-wrap: balance;
 }
 
@@ -42,7 +45,7 @@ a {
 }
 
 :focus-visible {
-  outline: 3px solid var(--edge);
+  outline: 3px solid var(--amber);
   outline-offset: 2px;
 }
 

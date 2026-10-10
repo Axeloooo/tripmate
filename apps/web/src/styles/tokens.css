@@ -1,37 +1,31 @@
-/* Waywise design tokens: terminal wayfinding. Four blue steps for depth, yellow only for "you are here" and the next action, red only for a decision. */
+/* Signposted design tokens: a departures board. Black board, one amber for the flaps and "now", green for on-time, red only for a hold. */
 :root {
   color-scheme: dark;
 
-  --wall: #10294a;
-  --wall-deep: #0b1f3a;
-  --plate: #0a1e38;
-  --plate-hover: #10294f;
-  --recess: #06152a;
-  --rule: #1f3b63;
-  --rule-plate: #1a3355;
-  --rule-strong: #5580b8;
+  --board: #0b0b0b;
+  --row: #161616;
+  --row-hi: #1e1e1e;
+  --row-now: #231c06;
+  --line: #2a2a2a;
+  --line-soft: #222222;
+  --line-field: #6b6b66;
 
-  --ink: #ffffff;
-  --ink-dim: #c3cfdf;
-  --ink-faint: #93a6c1;
+  --ink: #f2f2ee;
+  --ink-dim: #b4b4ae;
+  --ink-faint: #8c8c86;
 
-  --edge: #f7c948;
-  --edge-ink: #10294a;
+  --amber: #ffb400;
+  --go: #5be37d;
   --hold: #f25f5c;
-  --white-plate: #f2f5f9;
-  --white-ink: #0a1e38;
 
-  --mount: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 2px 0 #050f1f;
+  --font: "Sofia Sans", system-ui, sans-serif;
+  --font-board: "Sofia Sans Condensed", "Arial Narrow", Impact, sans-serif;
 
-  --font: "Atkinson Hyperlegible", system-ui, sans-serif;
-
-  --text-meta: 0.8125rem;
   --text-sm: 0.875rem;
   --text-md: 1rem;
-  --text-title: 1.0625rem;
-  --text-lg: 1.125rem;
-  --text-time: 1.75rem;
-  --text-h1: 2rem;
+  --text-title: 1.1875rem;
+  --text-h1: clamp(2.25rem, 6vw, 3.75rem);
+  --text-label: 0.9375rem;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -40,16 +34,7 @@
   --space-5: 24px;
   --space-6: 40px;
 
-  --radius-plate: 3px;
-  --radius-tile: 2px;
-  --edge-w: 6px;
+  --radius: 2px;
   --gutter: clamp(16px, 4vw, 40px);
-  --rail-w: 216px;
-}
-
-@media (max-width: 600px) {
-  :root {
-    --text-time: 1.375rem;
-    --text-h1: 1.625rem;
-  }
+  --cols: 8.5rem minmax(0, 1fr) 8rem 5.5rem 7.5rem;
 }

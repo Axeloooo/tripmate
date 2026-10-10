@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import type { TripApi } from "../api/client";
-import type { AgentId, AgentStatus, ProgressSnapshot } from "../api/types";
+import type { AgentStatus, ProgressSnapshot } from "../api/types";
 import { LinkButton } from "../components/Button";
-import type { PictogramName } from "../components/Pictogram";
 import { Sign, SignStack, type SignTone } from "../components/Sign";
 import { useAsync } from "../useAsync";
 
@@ -17,14 +16,7 @@ const LABEL: Record<AgentStatus, string> = {
   waiting: "Waiting",
   working: "Working",
   done: "Done",
-  hold: "Needs you",
-};
-
-const ICON: Record<AgentId, PictogramName> = {
-  research: "research",
-  itinerary: "itinerary",
-  budget: "budget",
-  reviewer: "reviewer",
+  hold: "Hold",
 };
 
 export function Progress({ api, id }: { api: TripApi; id: number }) {
@@ -37,7 +29,7 @@ export function Progress({ api, id }: { api: TripApi; id: number }) {
   if (trip.status === "error")
     return (
       <div className="stack">
-        <h1>No sign for this page</h1>
+        <h1>No row for this trip</h1>
         <p className="status status--error" role="alert">
           {trip.message}
         </p>
@@ -65,16 +57,16 @@ export function Progress({ api, id }: { api: TripApi; id: number }) {
       </p>
       <div>
         {snapshot ? (
-          <SignStack label="Crew progress">
+          <SignStack label="Crew progress" head={["Step", "Agent", "", "", "Status"]}>
             {snapshot.agents.map((a, i) => (
               <li key={a.id}>
                 <Sign
                   gate={String(i + 1)}
-                  icon={ICON[a.id]}
                   tone={TONE[a.status]}
                   title={a.name}
                   detail={a.note}
-                  trailing={LABEL[a.status]}
+                  status={LABEL[a.status]}
+                  index={i}
                 />
               </li>
             ))}

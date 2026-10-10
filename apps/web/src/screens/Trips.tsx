@@ -1,6 +1,6 @@
+import type { CSSProperties } from "react";
 import type { TripApi } from "../api/client";
 import { LinkButton } from "../components/Button";
-import { ArrowGlyph } from "../components/Pictogram";
 import { formatDate, formatUsd } from "../lib";
 import { useAsync } from "../useAsync";
 
@@ -30,36 +30,45 @@ export function Trips({ api }: { api: TripApi }) {
             <LinkButton href="#/">Plan a trip</LinkButton>
           </>
         ) : (
-          <div className="board">
-            <div className="board__head" aria-hidden="true">
-              <span>Gate</span>
+          <div className="board board--trips">
+            <div className="trow trow--head" aria-hidden="true">
+              <span>Trip</span>
               <span>Destination</span>
               <span>Days</span>
               <span>Budget</span>
-              <span>Status</span>
               <span>Created</span>
-              <span />
+              <span>Status</span>
             </div>
             <ul className="board__rows" aria-label="Trips">
-              {trips.data.map((t) => {
+              {trips.data.map((t, n) => {
                 const ready = t.status === "ready";
                 return (
                   <li key={t.id}>
                     <a
-                      className="board__row"
+                      className={`trow trow--link${ready ? "" : " trow--wait"}`}
                       href={ready ? `#/trips/${t.id}` : `#/trips/${t.id}/progress`}
                     >
-                      <span className="gate">{t.id}</span>
-                      <span className="board__dest">{t.destination}</span>
-                      <span className="board__days">{t.dayCount} days</span>
-                      <span className="board__budget">{formatUsd(t.budgetUsd)}</span>
-                      <span className={`pill${ready ? "" : " pill--wait"}`}>
-                        {ready ? "Ready" : "Crew is planning"}
+                      <span className="flaps" aria-hidden="true">
+                        {String(t.id)
+                          .split("")
+                          .map((ch, i) => (
+                            <span
+                              className="flap"
+                              key={i}
+                              style={{ "--flip": `${n * 90 + i * 40}ms` } as CSSProperties}
+                            >
+                              {ch}
+                            </span>
+                          ))}
                       </span>
-                      <span className="board__date">{formatDate(t.createdAt)}</span>
-                      <span className="board__go">
-                        <ArrowGlyph />
+                      <span className="trow__dest">
+                        <span className="visually-hidden">Trip {t.id}. </span>
+                        {t.destination}
                       </span>
+                      <span className="trow__days">{t.dayCount} days</span>
+                      <span className="trow__budget">{formatUsd(t.budgetUsd)}</span>
+                      <span className="trow__date">{formatDate(t.createdAt)}</span>
+                      <span className="trow__status">{ready ? "Ready" : "Planning"}</span>
                     </a>
                   </li>
                 );

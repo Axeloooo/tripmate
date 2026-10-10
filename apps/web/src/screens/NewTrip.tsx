@@ -127,13 +127,23 @@ export function NewTrip({ api }: { api: TripApi }) {
         </form>
       </div>
       <aside className="split__aside" aria-label="Preview">
-        <p className="aside__title">Your first sign</p>
-        <Sign
-          icon="trip"
-          tone="default"
-          title={destination.trim() || "Your destination"}
-          detail={previewDetail}
-        />
+        <p className="aside__title">Your first row</p>
+        <div className="board board--preview">
+          <ul className="board__rows" aria-label="First row">
+            <li>
+              <Sign
+                gate={String(previewDays > 0 && previewDays < 100 ? previewDays : 0).padStart(
+                  2,
+                  "0",
+                )}
+                tone="wait"
+                status="Planning"
+                title={destination.trim() || "Your destination"}
+                detail={previewDetail}
+              />
+            </li>
+          </ul>
+        </div>
         <p className="aside__note">
           Four agents take it from there: research, itinerary, budget, then a review.
         </p>
