@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, String, create_engine, func
+from sqlalchemy import JSON, DateTime, String, create_engine, func, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
@@ -19,6 +19,10 @@ class Trip(Base):
     interests: Mapped[list[str]] = mapped_column(JSON)
     plan: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # planning | ready | failed
+    status: Mapped[str] = mapped_column(String(16), default="ready", server_default="ready")
+    progress: Mapped[list[dict[str, str]] | None] = mapped_column(JSON, nullable=True)
+    error: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
 
 def make_engine(url: str) -> Engine:
@@ -28,3 +32,18 @@ def make_engine(url: str) -> Engine:
 
 def make_session_factory(engine: Engine) -> sessionmaker:
     return sessionmaker(bind=engine, expire_on_commit=False)
+
+
+def init_db(engine: Engine) -> None:
+    """Create tables, and add columns that databases created by an older version lack."""
+    Base.metadata.create_all(engine)
+    existing = {c["name"] for c in inspect(engine).get_columns(Trip.__tablename__)}
+    additions = {
+        "status": "VARCHAR(16) NOT NULL DEFAULT 'ready'",
+        "progress": "JSON",
+        "error": "VARCHAR(500)",
+    }
+    with engine.begin() as conn:
+        for name, ddl in additions.items():
+            if name not in existing:
+                conn.execute(text(f"ALTER TABLE {Trip.__tablename__} ADD COLUMN {name} {ddl}"))

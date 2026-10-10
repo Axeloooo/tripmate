@@ -14,7 +14,12 @@ RESEARCH_SYSTEM = (
 )
 ITINERARY_SYSTEM = (
     "You are the itinerary agent. Build a day-by-day plan that fits the number of days and "
-    "the traveler's interests. Use 'Day N:' headings with morning, afternoon and evening items."
+    "the traveler's interests. Start each day with a heading line like 'Day 1: Short title'. "
+    "Under it write one stop per line, in this exact format:\n"
+    "HH:MM | kind | title | detail | cost_usd\n"
+    "kind is one of flight, transit, food, stay, activity. detail is one short sentence. "
+    "cost_usd is a whole number of US dollars for the whole group, or empty if free. "
+    "Do not add any other text."
 )
 BUDGET_SYSTEM = (
     "You are the budget agent. Estimate the cost of the itinerary in USD, split into lodging, "
