@@ -1,0 +1,8 @@
+node_modules/
+package-lock.json
+CHANGELOG.md
+.venv/
+venv/
+dist/
+build/
+.claude/skills/
