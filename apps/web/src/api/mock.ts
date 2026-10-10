@@ -1,4 +1,7 @@
+import type { TripApi } from "./client";
 import type { AgentProgress, ProgressSnapshot, Trip } from "./types";
+
+/** Sample data for `VITE_USE_MOCK=true` and for tests. Production builds never include this file. */
 
 export const MOCK_TRIPS: Trip[] = [
   {
@@ -138,4 +141,60 @@ export function progressFrames(): ProgressSnapshot[] {
     })),
   });
   return [frame(0), frame(1), frame(2), frame(3), frame(4, true)];
+}
+
+export interface MockClientOptions {
+  /** Delay between progress frames, in milliseconds. */
+  frameDelayMs?: number;
+}
+
+export function createMockClient({ frameDelayMs = 1100 }: MockClientOptions = {}): TripApi {
+  const trips = MOCK_TRIPS.map((t) => ({ ...t }));
+  let nextId = Math.max(...trips.map((t) => t.id)) + 1;
+
+  return {
+    async listTrips() {
+      return [...trips].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    },
+    async getTrip(id) {
+      const trip = trips.find((t) => t.id === id);
+      if (!trip) throw new Error(`Trip ${id} was not found.`);
+      return trip;
+    },
+    async createTrip(request) {
+      const trip: Trip = {
+        id: nextId++,
+        destination: request.destination,
+        dayCount: request.days,
+        budgetUsd: request.budgetUsd,
+        interests: request.interests,
+        status: "planning",
+        createdAt: new Date().toISOString(),
+        // Empty until the crew finishes, so the trip never shows a plan that was not made for it.
+        itinerary: [],
+      };
+      trips.push(trip);
+      return trip;
+    },
+    watchProgress(id, onUpdate) {
+      const frames = progressFrames();
+      let i = 0;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const step = () => {
+        const snapshot = frames[i++];
+        onUpdate(snapshot);
+        if (snapshot.complete) {
+          const trip = trips.find((t) => t.id === id);
+          if (trip) {
+            trip.status = "ready";
+            if (trip.itinerary.length === 0) trip.itinerary = MOCK_TRIPS[0].itinerary;
+          }
+        } else {
+          timer = setTimeout(step, frameDelayMs);
+        }
+      };
+      timer = setTimeout(step, 0);
+      return () => clearTimeout(timer);
+    },
+  };
 }

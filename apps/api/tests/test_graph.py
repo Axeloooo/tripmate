@@ -111,3 +111,53 @@ def test_reviewer_approval_parsing(review, approved):
     }
 
     assert reviewer(state)["approved"] is approved
+
+
+def test_progress_reports_each_finished_agent_and_who_is_next():
+    graph = _graph("r", "i", "b", "REVISE: a", "i2", "b2", "APPROVE")
+    events: list[tuple[list[str], str | None]] = []
+
+    plan_trip(graph, **TRIP, on_progress=lambda done, current: events.append((done, current)))
+
+    assert events[0] == ([], "research_agent")
+    assert events[1] == (["research_agent"], "itinerary_agent")
+    assert events[4][1] == "itinerary_agent"  # reviewer asked for a revision
+    assert events[-1][1] is None
+    assert events[-1][0].count("itinerary_agent") == 2
+
+
+def test_structured_itinerary_is_parsed_and_fences_are_tolerated():
+    body = '{"days": [{"label": "Day 1", "stops": [{"time": "08:00", "title": "Walk"}]}]}'
+    reply = f"```json\n{body}\n```"
+    result = plan_trip(_graph("r", reply, "b", "APPROVE"), **TRIP)
+
+    assert result["days"] == [
+        {
+            "label": "Day 1",
+            "stops": [
+                {
+                    "time": "08:00",
+                    "title": "Walk",
+                    "detail": "",
+                    "kind": "activity",
+                    "cost_usd": None,
+                }
+            ],
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        "Day 1: Alfama",
+        '{"days": []}',
+        '{"days": [{"label": "Day 1", "stops": [{"time": "25:00", "title": "x"}]}]}',
+        '{"days": [{"label": "Day 1", "stops": [{"time": "08:00", "title": "x", "kind": "spa"}]}]}',
+    ],
+)
+def test_unusable_itinerary_leaves_days_empty(reply):
+    result = plan_trip(_graph("r", reply, "b", "APPROVE"), **TRIP)
+
+    assert result["days"] is None
+    assert result["itinerary"] == reply

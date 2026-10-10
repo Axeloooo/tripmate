@@ -3,7 +3,8 @@ from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from langchain_core.language_models import BaseChatModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -13,6 +14,9 @@ from app.config import Settings
 from app.db import Base, Trip, make_engine, make_session_factory
 from app.llm import build_llm
 from app.schemas import TripOut, TripRequest
+
+PLANNING_FAILED = "Planning service unavailable"
+INTERRUPTED = "Planning was interrupted by a restart. Plan the trip again."
 
 
 def create_app(settings: Settings | None = None, llm: BaseChatModel | None = None) -> FastAPI:
@@ -24,10 +28,58 @@ def create_app(settings: Settings | None = None, llm: BaseChatModel | None = Non
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         Base.metadata.create_all(engine)
+        _fail_interrupted_trips()
         yield
         engine.dispose()
 
     app = FastAPI(title="TripMate AI", version="0.1.0", lifespan=lifespan)
+    if settings.cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=list(settings.cors_origins),
+            allow_methods=["GET", "POST"],
+            allow_headers=["Content-Type"],
+        )
+
+    def _save_plan(trip_id: int, plan: dict[str, Any]) -> None:
+        with session_factory() as session:
+            trip = session.get(Trip, trip_id)
+            if trip is not None:
+                trip.plan = plan
+                session.commit()
+
+    def _fail_interrupted_trips() -> None:
+        """A restart kills in-flight planning; mark those trips failed instead of leaving them."""
+        with session_factory() as session:
+            for trip in session.scalars(select(Trip)):
+                if trip.plan.get("status") == "planning":
+                    trip.plan = {**trip.plan, "status": "failed", "error": INTERRUPTED}
+            session.commit()
+
+    def run_planning(trip_id: int, graph: Any, request: TripRequest) -> None:
+        progress: dict[str, Any] = {"completed": [], "current": "research_agent"}
+
+        def on_progress(completed: list[str], current: str | None) -> None:
+            progress.update(completed=completed, current=current)
+            _save_plan(trip_id, {"status": "planning", "progress": dict(progress)})
+
+        try:
+            plan = plan_trip(
+                graph,
+                destination=request.destination,
+                days=request.days,
+                budget_usd=request.budget_usd,
+                interests=request.interests,
+                on_progress=on_progress,
+            )
+        except Exception:
+            logging.getLogger(__name__).exception("Trip planning failed")
+            _save_plan(
+                trip_id,
+                {"status": "failed", "error": PLANNING_FAILED, "progress": dict(progress)},
+            )
+            return
+        _save_plan(trip_id, {"status": "ready", **plan, "progress": dict(progress)})
 
     def get_graph():
         if "graph" not in graph_cache:
@@ -46,33 +98,25 @@ def create_app(settings: Settings | None = None, llm: BaseChatModel | None = Non
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.post("/trips", response_model=TripOut, status_code=201)
+    @app.post("/trips", response_model=TripOut, status_code=202)
     def create_trip(
         request: TripRequest,
+        background: BackgroundTasks,
         graph=Depends(get_graph),
         session: Session = Depends(get_session),
     ) -> Trip:
-        try:
-            plan = plan_trip(
-                graph,
-                destination=request.destination,
-                days=request.days,
-                budget_usd=request.budget_usd,
-                interests=request.interests,
-            )
-        except Exception as exc:
-            logging.getLogger(__name__).exception("Trip planning failed")
-            raise HTTPException(status_code=502, detail="Planning service unavailable") from exc
+        """Starts planning and returns at once. Poll `GET /trips/{id}` for `plan.status`."""
         trip = Trip(
             destination=request.destination,
             days=request.days,
             budget_usd=request.budget_usd,
             interests=request.interests,
-            plan=plan,
+            plan={"status": "planning", "progress": {"completed": [], "current": "research_agent"}},
         )
         session.add(trip)
         session.commit()
         session.refresh(trip)
+        background.add_task(run_planning, trip.id, graph, request)
         return trip
 
     @app.get("/trips", response_model=list[TripOut])

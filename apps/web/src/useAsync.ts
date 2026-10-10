@@ -1,12 +1,17 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type AsyncState<T> =
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ready"; data: T };
 
-export function useAsync<T>(load: () => Promise<T>, deps: unknown[]): AsyncState<T> {
+/** Runs `load` whenever `deps` change. `reload` runs it again, for a retry button. */
+export function useAsync<T>(
+  load: () => Promise<T>,
+  deps: unknown[],
+): AsyncState<T> & { reload: () => void } {
   const [state, setState] = useState<AsyncState<T>>({ status: "loading" });
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let live = true;
     setState({ status: "loading" });
@@ -18,6 +23,7 @@ export function useAsync<T>(load: () => Promise<T>, deps: unknown[]): AsyncState
     return () => {
       live = false;
     };
-  }, deps);
-  return state;
+  }, [...deps, attempt]);
+  const reload = useCallback(() => setAttempt((n) => n + 1), []);
+  return { ...state, reload };
 }

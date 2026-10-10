@@ -1,5 +1,4 @@
-import { useEffect, useMemo } from "react";
-import { createApiClient } from "./api/client";
+import { useEffect } from "react";
 import { PRODUCT_NAME } from "./config";
 import { Shell } from "./components/Shell";
 import { LinkButton } from "./components/Button";
@@ -10,8 +9,7 @@ import { Progress } from "./screens/Progress";
 import { Trips } from "./screens/Trips";
 import type { TripApi } from "./api/client";
 
-export function App({ client }: { client?: TripApi }) {
-  const api = useMemo(() => client ?? createApiClient(), [client]);
+export function App({ client: api }: { client: TripApi }) {
   const route = useRoute();
 
   useEffect(() => {

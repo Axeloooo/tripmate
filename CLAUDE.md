@@ -4,7 +4,7 @@ Multi-agent trip planner: FastAPI + LangGraph (Groq) + PostgreSQL. Python 3.13.
 
 ## Layout
 
-Monorepo. `apps/api` is the FastAPI backend (app code, tests, requirements, `pyproject.toml`, docker-compose, `.env.example`). `apps/web` is the Vite + React + TypeScript UI (Signposted templates on mock data), and `packages/` is reserved for shared code. Repo-wide tooling stays at the root: `package.json`, `.releaserc.json`, `.prettierrc`, `.pre-commit-config.yaml`, `.cz.toml` (commitizen), `.github/`, `.claude/`, `scripts/`.
+Monorepo. `apps/api` is the FastAPI backend (app code, tests, requirements, `pyproject.toml`, docker-compose, `.env.example`). `apps/web` is the Vite + React + TypeScript UI (Signposted terminal design, talks to `apps/api`), and `packages/` is reserved for shared code. Repo-wide tooling stays at the root: `package.json`, `.releaserc.json`, `.prettierrc`, `.pre-commit-config.yaml`, `.cz.toml` (commitizen), `.github/`, `.claude/`, `scripts/`.
 
 ## Commands
 
@@ -16,7 +16,7 @@ npm install                         # prettier and semantic-release
 npx prettier --write .
 ```
 
-Web (run from `apps/web`): `npm install`, `npm run dev`, `npm test`, `npm run build`. Design tokens live in `src/styles/tokens.css`, the product name in `src/config.ts`, and all backend access behind `TripApi` in `src/api/client.ts` (mock only until wired to `apps/api`).
+Web (run from `apps/web`): `npm install`, `npm run dev`, `npm test`, `npm run build`. Design tokens live in `src/styles/tokens.css`, the product name in `src/config.ts`, and all backend access behind `TripApi` in `src/api/client.ts` (HTTP by default; `VITE_USE_MOCK=true` serves sample data in dev only).
 
 API (run from `apps/api`):
 
@@ -37,7 +37,8 @@ mypy
 All paths below are under `apps/api/`.
 
 - `create_app` factory builds the FastAPI app; the LangGraph graph is built lazily on first use and cached.
-- Planning returns 503 when no `GROQ_API_KEY` is set and 502 when planning fails.
+- `POST /trips` returns 202 at once and plans in a background task; `plan.status` is `planning`, `ready` or `failed`, with `plan.progress` per agent. It returns 503 when no `GROQ_API_KEY` is set. A failed run is saved as `failed`, and trips still `planning` at startup are marked failed.
+- The itinerary agent replies with JSON; `plan.days` holds the parsed stops, or null when the reply is unusable (the raw text stays in `plan.itinerary`). `CORS_ORIGINS` lists browser origins allowed to call the API directly.
 - Graph: START -> research_agent -> itinerary_agent -> budget_agent -> reviewer_agent -> conditional edge back to itinerary_agent, or END. `MAX_REVIEW_ROUNDS` is 2.
 - `TripState` is a `TypedDict` with `total=False`. `plan_trip` invokes the graph and shapes the result.
 - Tests use `FakeListChatModel` and SQLite, so no API key or database is needed.

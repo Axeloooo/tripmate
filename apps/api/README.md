@@ -18,10 +18,10 @@ uvicorn app.main:app --reload
 ## API
 
 - `GET /health`
-- `POST /trips` with `{"destination": "Lisbon", "days": 3, "budget_usd": 1500, "interests": ["food"]}`
-- `GET /trips`, `GET /trips/{id}`
+- `POST /trips` with `{"destination": "Lisbon", "days": 3, "budget_usd": 1500, "interests": ["food"]}` returns `202` with the new trip straight away and plans in the background.
+- `GET /trips`, `GET /trips/{id}`: poll a trip until `plan.status` is `ready` or `failed`. While `planning`, `plan.progress` lists the agents that finished and the one working now. A ready plan carries `plan.days` (structured stops, or `null` if the model's reply could not be parsed) beside the raw `research`, `itinerary`, `budget` and `review` text. A failed plan carries `plan.error`.
 
-Planning returns 503 until `GROQ_API_KEY` is set. Interactive docs are at `/docs`.
+Planning returns 503 until `GROQ_API_KEY` is set. A restart marks any trip still `planning` as `failed`. Set `CORS_ORIGINS` (comma-separated) only if a browser calls the API from another origin; behind the web proxy it is not needed. Interactive docs are at `/docs`.
 
 ## Tests
 
