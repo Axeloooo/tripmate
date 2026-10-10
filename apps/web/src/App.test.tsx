@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createMockClient } from "./api/client";
+import { createMockClient } from "./api/mock";
 import { App } from "./App";
 import { Sign } from "./components/Sign";
 import { PRODUCT_NAME } from "./config";

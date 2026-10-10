@@ -4,13 +4,13 @@ Multi-agent travel planner. A LangGraph pipeline of Groq-backed agents (research
 
 ## Layout
 
-| Path        | Contents                                                                                  |
-| ----------- | ----------------------------------------------------------------------------------------- |
-| `apps/api`  | FastAPI + LangGraph backend (see [apps/api/README.md](apps/api/README.md))                |
-| `apps/web`  | Signposted React + TypeScript UI templates (see [apps/web/README.md](apps/web/README.md)) |
-| `packages/` | Reserved for code shared between apps                                                     |
-| `scripts/`  | Git hook helper scripts                                                                   |
-| `.github/`  | CI workflows (PR checks, release)                                                         |
+| Path        | Contents                                                                                          |
+| ----------- | ------------------------------------------------------------------------------------------------- |
+| `apps/api`  | FastAPI + LangGraph backend (see [apps/api/README.md](apps/api/README.md))                        |
+| `apps/web`  | Signposted React + TypeScript UI, wired to the API (see [apps/web/README.md](apps/web/README.md)) |
+| `packages/` | Reserved for code shared between apps                                                             |
+| `scripts/`  | Git hook helper scripts                                                                           |
+| `.github/`  | CI workflows (PR checks, release)                                                                 |
 
 To run the API locally, see [apps/api/README.md](apps/api/README.md).
 

@@ -1,7 +1,7 @@
 import type { TripApi } from "../api/client";
-import type { Stop, StopState } from "../api/types";
+import type { Stop, StopState, Trip } from "../api/types";
 import { BudgetBar } from "../components/BudgetBar";
-import { LinkButton } from "../components/Button";
+import { Button, LinkButton } from "../components/Button";
 import { Sign, SignStack, type SignTone } from "../components/Sign";
 import { formatUsd } from "../lib";
 import { useAsync } from "../useAsync";
@@ -32,7 +32,10 @@ export function Itinerary({ api, id }: { api: TripApi; id: number }) {
         <p className="status status--error" role="alert">
           {trip.message}
         </p>
-        <LinkButton href="#/trips">Back to your trips</LinkButton>
+        <div className="actions">
+          <Button onClick={trip.reload}>Try again</Button>
+          <LinkButton href="#/trips">Back to your trips</LinkButton>
+        </div>
       </div>
     );
 
@@ -50,12 +53,29 @@ export function Itinerary({ api, id }: { api: TripApi; id: number }) {
           {data.interests.length > 0 && ` · ${data.interests.join(", ")}`}
         </p>
       </header>
-      {data.itinerary.length === 0 ? (
+      {data.status === "planning" && (
         <>
           <p className="status">The crew is still planning this trip.</p>
           <LinkButton href={`#/trips/${data.id}/progress`}>Watch the crew</LinkButton>
         </>
-      ) : (
+      )}
+      {data.status === "failed" && (
+        <>
+          <p className="status status--error" role="alert">
+            {data.error ?? "Planning failed."}
+          </p>
+          <LinkButton href="#/">Plan it again</LinkButton>
+        </>
+      )}
+      {data.status === "ready" && data.itinerary.length === 0 && (
+        <div className="stack">
+          <p className="notice">
+            The crew's plan came back as text, so it is shown without the board.
+          </p>
+          <p className="prose">{data.itineraryText || "The plan is empty."}</p>
+        </div>
+      )}
+      {data.status === "ready" && data.itinerary.length > 0 && (
         <>
           <BudgetBar spentUsd={spent} budgetUsd={data.budgetUsd} />
           {decisions > 0 && (
@@ -88,6 +108,31 @@ export function Itinerary({ api, id }: { api: TripApi; id: number }) {
           ))}
         </>
       )}
+      {data.status === "ready" && <Notes trip={data} />}
     </div>
+  );
+}
+
+function Notes({ trip }: { trip: Trip }) {
+  const notes = [
+    { title: "Research", text: trip.researchNotes },
+    { title: "Budget", text: trip.budgetNotes },
+    {
+      title: trip.review?.approved
+        ? "Review: approved"
+        : `Review: ${trip.review?.rounds ?? 0} rounds, not approved`,
+      text: trip.review?.text,
+    },
+  ].filter((n) => n.text);
+  if (notes.length === 0) return null;
+  return (
+    <section className="notes" aria-label="Crew notes">
+      {notes.map((n) => (
+        <details key={n.title}>
+          <summary>{n.title}</summary>
+          <p className="prose">{n.text}</p>
+        </details>
+      ))}
+    </section>
   );
 }

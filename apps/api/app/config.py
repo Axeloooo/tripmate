@@ -12,6 +12,7 @@ class Settings:
     database_url: str
     groq_api_key: str | None
     groq_model: str
+    cors_origins: tuple[str, ...] = ()
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -20,4 +21,9 @@ class Settings:
             database_url=os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL),
             groq_api_key=os.getenv("GROQ_API_KEY") or None,
             groq_model=os.getenv("GROQ_MODEL", DEFAULT_GROQ_MODEL),
+            cors_origins=tuple(
+                origin.strip()
+                for origin in os.getenv("CORS_ORIGINS", "").split(",")
+                if origin.strip()
+            ),
         )

@@ -1,76 +1,137 @@
-import { MOCK_TRIPS, progressFrames } from "./mock";
 import type { ProgressSnapshot, Trip, TripRequest } from "./types";
+import { toTrip, toProgress, type TripOut } from "./map";
 
-/**
- * Everything the UI needs from the backend. Screens depend on this interface only, so wiring
- * apps/api later means writing one more implementation and changing `createApiClient`.
- */
+/** Everything the UI needs from the backend. Screens depend on this interface only. */
 export interface TripApi {
   listTrips(): Promise<Trip[]>;
   getTrip(id: number): Promise<Trip>;
   createTrip(request: TripRequest): Promise<Trip>;
-  /** Calls `onUpdate` with each progress frame. Returns a function that stops watching. */
-  watchProgress(id: number, onUpdate: (snapshot: ProgressSnapshot) => void): () => void;
+  /**
+   * Calls `onUpdate` with each progress frame until planning ends. Calls `onError` if the server
+   * stops answering. Returns a function that stops watching.
+   */
+  watchProgress(
+    id: number,
+    onUpdate: (snapshot: ProgressSnapshot) => void,
+    onError?: (message: string) => void,
+  ): () => void;
 }
 
-export interface MockClientOptions {
-  /** Delay between progress frames, in milliseconds. */
-  frameDelayMs?: number;
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status?: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
 }
 
-export function createMockClient({ frameDelayMs = 1100 }: MockClientOptions = {}): TripApi {
-  const trips = MOCK_TRIPS.map((t) => ({ ...t }));
-  let nextId = Math.max(...trips.map((t) => t.id)) + 1;
+export interface HttpClientOptions {
+  /** Base URL with no trailing slash. */
+  baseUrl?: string;
+  fetchImpl?: typeof fetch;
+  /** Time between progress polls, in milliseconds. */
+  pollMs?: number;
+}
+
+const OFFLINE = "Can't reach the Signposted server. Check your connection and try again.";
+const MAX_POLL_FAILURES = 3;
+
+/** Turns a failed response into a sentence a traveller can act on. */
+async function describeFailure(response: Response): Promise<ApiError> {
+  let detail: unknown;
+  try {
+    detail = ((await response.json()) as { detail?: unknown }).detail;
+  } catch {
+    detail = undefined;
+  }
+  const status = response.status;
+  if (status === 404) return new ApiError("This trip was not found.", status);
+  if (status === 422)
+    return new ApiError("The trip request was not accepted. Check the form.", 422);
+  if (status === 503)
+    return new ApiError("Planning is switched off on this server. Try again later.", status);
+  if (typeof detail === "string" && status < 500) return new ApiError(detail, status);
+  return new ApiError("The server hit a problem. Try again in a moment.", status);
+}
+
+export function createHttpClient({
+  baseUrl = "/api",
+  fetchImpl,
+  pollMs = 1500,
+}: HttpClientOptions = {}): TripApi {
+  const base = baseUrl.replace(/\/+$/, "");
+
+  async function request<T>(path: string, init?: RequestInit): Promise<T> {
+    let response: Response;
+    try {
+      response = await (fetchImpl ?? fetch)(`${base}${path}`, {
+        ...init,
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+      });
+    } catch {
+      throw new ApiError(OFFLINE);
+    }
+    if (!response.ok) throw await describeFailure(response);
+    return (await response.json()) as T;
+  }
+
+  const getTrip = async (id: number) => toTrip(await request<TripOut>(`/trips/${id}`));
 
   return {
     async listTrips() {
-      return [...trips].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      return (await request<TripOut[]>("/trips")).map(toTrip);
     },
-    async getTrip(id) {
-      const trip = trips.find((t) => t.id === id);
-      if (!trip) throw new Error(`Trip ${id} was not found.`);
-      return trip;
+    getTrip,
+    async createTrip(req) {
+      const body = JSON.stringify({
+        destination: req.destination,
+        days: req.days,
+        budget_usd: req.budgetUsd,
+        interests: req.interests,
+      });
+      return toTrip(await request<TripOut>("/trips", { method: "POST", body }));
     },
-    async createTrip(request) {
-      // The mock reuses the Barcelona itinerary so a new request has something to show.
-      const sample = MOCK_TRIPS[0];
-      const trip: Trip = {
-        ...sample,
-        id: nextId++,
-        destination: request.destination,
-        dayCount: request.days,
-        budgetUsd: request.budgetUsd,
-        interests: request.interests,
-        status: "planning",
-        createdAt: new Date().toISOString(),
-      };
-      trips.push(trip);
-      return trip;
-    },
-    watchProgress(id, onUpdate) {
-      const frames = progressFrames();
-      let i = 0;
+    watchProgress(id, onUpdate, onError) {
+      let stopped = false;
+      let failures = 0;
       let timer: ReturnType<typeof setTimeout> | undefined;
-      const step = () => {
-        const snapshot = frames[i++];
-        onUpdate(snapshot);
-        if (snapshot.complete) {
-          const trip = trips.find((t) => t.id === id);
-          if (trip) {
-            trip.status = "ready";
-            if (trip.itinerary.length === 0) trip.itinerary = MOCK_TRIPS[0].itinerary;
+      const tick = async () => {
+        try {
+          const trip = await getTrip(id);
+          if (stopped) return;
+          failures = 0;
+          const snapshot = toProgress(trip);
+          onUpdate(snapshot);
+          if (snapshot.complete || snapshot.error) return;
+        } catch (e) {
+          if (stopped) return;
+          if (e instanceof ApiError && e.status !== undefined && e.status < 500) {
+            onError?.(e.message);
+            return;
           }
-        } else {
-          timer = setTimeout(step, frameDelayMs);
+          if (++failures >= MAX_POLL_FAILURES) {
+            onError?.(e instanceof Error ? e.message : OFFLINE);
+            return;
+          }
         }
+        timer = setTimeout(tick, pollMs);
       };
-      timer = setTimeout(step, 0);
-      return () => clearTimeout(timer);
+      void tick();
+      return () => {
+        stopped = true;
+        clearTimeout(timer);
+      };
     },
   };
 }
 
 /** The one place that decides which implementation the app uses. */
-export function createApiClient(): TripApi {
-  return createMockClient();
+export async function createApiClient(): Promise<TripApi> {
+  if (import.meta.env.VITE_USE_MOCK === "true") {
+    // Dynamic, and behind a build-time constant, so production bundles carry no sample data.
+    return (await import("./mock")).createMockClient();
+  }
+  return createHttpClient({ baseUrl: import.meta.env.VITE_API_URL || "/api" });
 }

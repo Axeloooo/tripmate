@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { TripApi } from "../api/client";
-import { LinkButton } from "../components/Button";
+import { Button, LinkButton } from "../components/Button";
 import { formatDate, formatUsd } from "../lib";
 import { useAsync } from "../useAsync";
 
@@ -19,9 +19,14 @@ export function Trips({ api }: { api: TripApi }) {
       </header>
       {trips.status === "loading" && <p className="status">Loading your trips.</p>}
       {trips.status === "error" && (
-        <p className="status status--error" role="alert">
-          {trips.message}
-        </p>
+        <>
+          <p className="status status--error" role="alert">
+            {trips.message}
+          </p>
+          <div className="actions">
+            <Button onClick={trips.reload}>Try again</Button>
+          </div>
+        </>
       )}
       {trips.status === "ready" &&
         (trips.data.length === 0 ? (
@@ -42,11 +47,12 @@ export function Trips({ api }: { api: TripApi }) {
             <ul className="board__rows" aria-label="Trips">
               {trips.data.map((t, n) => {
                 const ready = t.status === "ready";
+                const failed = t.status === "failed";
                 return (
                   <li key={t.id}>
                     <a
-                      className={`trow trow--link${ready ? "" : " trow--wait"}`}
-                      href={ready ? `#/trips/${t.id}` : `#/trips/${t.id}/progress`}
+                      className={`trow trow--link${ready ? "" : failed ? " trow--failed" : " trow--wait"}`}
+                      href={ready || failed ? `#/trips/${t.id}` : `#/trips/${t.id}/progress`}
                     >
                       <span className="flaps" aria-hidden="true">
                         {String(t.id)
@@ -68,7 +74,9 @@ export function Trips({ api }: { api: TripApi }) {
                       <span className="trow__days">{t.dayCount} days</span>
                       <span className="trow__budget">{formatUsd(t.budgetUsd)}</span>
                       <span className="trow__date">{formatDate(t.createdAt)}</span>
-                      <span className="trow__status">{ready ? "Ready" : "Planning"}</span>
+                      <span className="trow__status">
+                        {ready ? "Ready" : failed ? "Failed" : "Planning"}
+                      </span>
                     </a>
                   </li>
                 );
