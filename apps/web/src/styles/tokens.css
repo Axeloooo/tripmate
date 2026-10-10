@@ -1,23 +1,37 @@
-/* Waywise design tokens: airport wayfinding. White on blue, one yellow edge, one red for decisions. */
+/* Waywise design tokens: terminal wayfinding. Four blue steps for depth, yellow only for "you are here" and the next action, red only for a decision. */
 :root {
   color-scheme: dark;
 
   --wall: #10294a;
-  --sign: #0a1e38;
-  --edge: #f7c948;
-  --hold: #f25f5c;
+  --wall-deep: #0b1f3a;
+  --plate: #0a1e38;
+  --plate-hover: #10294f;
+  --recess: #06152a;
+  --rule: #1f3b63;
+  --rule-plate: #1a3355;
+  --rule-strong: #5580b8;
+
   --ink: #ffffff;
   --ink-dim: #c3cfdf;
-  --line: #27456f;
+  --ink-faint: #93a6c1;
+
+  --edge: #f7c948;
+  --edge-ink: #10294a;
+  --hold: #f25f5c;
+  --white-plate: #f2f5f9;
+  --white-ink: #0a1e38;
+
+  --mount: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 2px 0 #050f1f;
 
   --font: "Atkinson Hyperlegible", system-ui, sans-serif;
 
+  --text-meta: 0.8125rem;
   --text-sm: 0.875rem;
   --text-md: 1rem;
-  --text-lg: 1.25rem;
-  --text-xl: 1.625rem;
-  --text-time: clamp(1.5rem, 4.5vw, 2.25rem);
-  --text-display: clamp(2rem, 6vw, 3.5rem);
+  --text-title: 1.0625rem;
+  --text-lg: 1.125rem;
+  --text-time: 1.75rem;
+  --text-h1: 2rem;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -26,8 +40,16 @@
   --space-5: 24px;
   --space-6: 40px;
 
-  --radius: 8px;
-  --edge-width: 8px;
+  --radius-plate: 3px;
+  --radius-tile: 2px;
+  --edge-w: 6px;
   --gutter: clamp(16px, 4vw, 40px);
-  --measure: 760px;
+  --rail-w: 216px;
+}
+
+@media (max-width: 600px) {
+  :root {
+    --text-time: 1.375rem;
+    --text-h1: 1.625rem;
+  }
 }

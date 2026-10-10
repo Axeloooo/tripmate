@@ -25,11 +25,11 @@ export function Shell({
   children: ReactNode;
 }) {
   return (
-    <>
-      <header className="shell__header">
+    <div className="shell">
+      <header className="rail">
         <a className="brand" href="#/">
           <Logo />
-          {PRODUCT_NAME}
+          <span className="brand__name">{PRODUCT_NAME}</span>
         </a>
         <nav className="nav" aria-label="Main">
           <a href="#/" aria-current={section === "new" ? "page" : undefined}>
@@ -41,6 +41,6 @@ export function Shell({
         </nav>
       </header>
       <main className="page">{children}</main>
-    </>
+    </div>
   );
 }

@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import type { TripApi } from "../api/client";
 import { Button } from "../components/Button";
+import { Sign } from "../components/Sign";
 import { TextField } from "../components/TextField";
 import { PRODUCT_TAGLINE } from "../config";
-import { parseInterests } from "../lib";
+import { formatUsd, parseInterests } from "../lib";
 import { navigate } from "../router";
 
 interface Errors {
@@ -62,58 +63,81 @@ export function NewTrip({ api }: { api: TripApi }) {
     }
   }
 
+  const previewDays = Number(days);
+  const previewBudget = Number(budget);
+  const previewDetail =
+    Number.isInteger(previewDays) && previewDays > 0 && previewBudget > 0
+      ? `${previewDays} ${previewDays === 1 ? "day" : "days"} · ${formatUsd(previewBudget)}`
+      : "Add days and a budget";
+
   return (
-    <>
-      <h1>Where to?</h1>
-      <p className="page__lede">{PRODUCT_TAGLINE}</p>
-      <form className="form" onSubmit={onSubmit} noValidate>
-        <TextField
-          label="Destination"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
-          error={errors.destination}
-          autoComplete="off"
-          placeholder="Barcelona"
-        />
-        <div className="form__row">
+    <div className="split split--form">
+      <div className="split__main stack">
+        <header className="page__head">
+          <h1>Where to?</h1>
+        </header>
+        <p className="page__lede">{PRODUCT_TAGLINE}</p>
+        <form className="form plate" onSubmit={onSubmit} noValidate>
           <TextField
-            label="Days"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={14}
-            value={days}
-            onChange={(e) => setDays(e.target.value)}
-            error={errors.days}
+            label="Destination"
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            error={errors.destination}
+            autoComplete="off"
+            placeholder="Barcelona"
           />
+          <div className="form__row">
+            <TextField
+              label="Days"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={14}
+              value={days}
+              onChange={(e) => setDays(e.target.value)}
+              error={errors.days}
+            />
+            <TextField
+              label="Budget in USD"
+              type="number"
+              inputMode="numeric"
+              min={100}
+              step={50}
+              value={budget}
+              onChange={(e) => setBudget(e.target.value)}
+              error={errors.budget}
+            />
+          </div>
           <TextField
-            label="Budget in USD"
-            type="number"
-            inputMode="numeric"
-            min={100}
-            step={50}
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-            error={errors.budget}
+            label="Interests"
+            hint="Separate with commas. Up to 10. Optional."
+            error={errors.interests}
+            value={interests}
+            onChange={(e) => setInterests(e.target.value)}
+            placeholder="food, architecture"
           />
-        </div>
-        <TextField
-          label="Interests"
-          hint="Separate with commas. Up to 10. Optional."
-          error={errors.interests}
-          value={interests}
-          onChange={(e) => setInterests(e.target.value)}
-          placeholder="food, architecture"
+          {errors.submit && (
+            <p className="status status--error" role="alert">
+              {errors.submit}
+            </p>
+          )}
+          <Button type="submit" disabled={busy}>
+            {busy ? "Sending the crew" : "Plan my trip"}
+          </Button>
+        </form>
+      </div>
+      <aside className="split__aside" aria-label="Preview">
+        <p className="aside__title">Your first sign</p>
+        <Sign
+          icon="trip"
+          tone="default"
+          title={destination.trim() || "Your destination"}
+          detail={previewDetail}
         />
-        {errors.submit && (
-          <p className="status status--error" role="alert">
-            {errors.submit}
-          </p>
-        )}
-        <Button type="submit" disabled={busy}>
-          {busy ? "Sending the crew" : "Plan my trip"}
-        </Button>
-      </form>
-    </>
+        <p className="aside__note">
+          Four agents take it from there: research, itinerary, budget, then a review.
+        </p>
+      </aside>
+    </div>
   );
 }
