@@ -18,7 +18,7 @@ jobs:
           HEAD: ${{ github.head_ref }}
         run: |
           if [ "$BASE" = "main" ]; then
-            [ "$HEAD" = "devel" ] || { echo "PRs into main must come from devel (got $HEAD)"; exit 1; }
+            [[ "$HEAD" == "devel" || "$HEAD" =~ ^release/[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || { echo "PRs into main must come from devel or release/YYYY-MM-DD (got $HEAD)"; exit 1; }
           elif [ "$BASE" = "devel" ] && [ "$HEAD" = "main" ]; then
             echo "Back-merge main -> devel allowed"
           else
