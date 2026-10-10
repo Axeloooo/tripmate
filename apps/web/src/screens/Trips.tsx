@@ -51,7 +51,9 @@ export function Trips({ api }: { api: TripApi }) {
                 return (
                   <li key={t.id}>
                     <a
-                      className={`trow trow--link${ready ? "" : failed ? " trow--failed" : " trow--wait"}`}
+                      className={`trow trow--link${
+                        ready ? "" : failed ? " trow--failed" : " trow--wait"
+                      }`}
                       href={ready || failed ? `#/trips/${t.id}` : `#/trips/${t.id}/progress`}
                     >
                       <span className="flaps" aria-hidden="true">

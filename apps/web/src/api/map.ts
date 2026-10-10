@@ -142,6 +142,6 @@ export function toProgress(trip: Trip): ProgressSnapshot {
   return {
     agents,
     complete: trip.status === "ready",
-    error: trip.status === "failed" ? (trip.error ?? "Planning failed.") : undefined,
+    error: trip.status === "failed" ? trip.error ?? "Planning failed." : undefined,
   };
 }
