@@ -1,0 +1,54 @@
+# Database, API and web app together: `docker compose up --build`, then open http://localhost:8080.
+# Settings come from the environment or a `.env` file next to this one (see .env.example).
+name: tripmate
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: tripmate
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tripmate}
+      POSTGRES_DB: tripmate
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tripmate -d tripmate"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build: ./apps/api
+    environment:
+      DATABASE_URL: postgresql+psycopg://tripmate:${POSTGRES_PASSWORD:-tripmate}@db:5432/tripmate
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  web:
+    build: ./apps/web
+    environment:
+      API_UPSTREAM: http://api:8000
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

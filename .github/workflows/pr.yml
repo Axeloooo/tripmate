@@ -101,3 +101,12 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker compose config --quiet
+      - run: docker compose build
+      - name: Check the nginx config renders and parses
+        run: docker run --rm -e API_UPSTREAM=http://api:8000 tripmate-web nginx -t

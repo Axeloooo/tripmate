@@ -1,0 +1,52 @@
+# Rendered when the container starts: the nginx image runs envsubst over this file, filling in
+# ${API_UPSTREAM} and ${NGINX_LOCAL_RESOLVERS} (the DNS servers from /etc/resolv.conf).
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    gzip on;
+    gzip_min_length 1024;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options "DENY" always;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # The browser calls /api/...; the API itself serves /... (no prefix). Resolving the upstream
+    # per request means nginx starts even when the API is not up yet.
+    location /api/ {
+        resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
+        set $api_upstream "${API_UPSTREAM}";
+        rewrite ^/api/(.*)$ /$1 break;
+        proxy_pass $api_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+
+    # Built files are fingerprinted, so they can be cached for good.
+    location /assets/ {
+        expires max;
+        add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
+        try_files $uri =404;
+    }
+
+    # History fallback: any other path gets the app, which is never cached.
+    location / {
+        expires -1;
+        try_files $uri /index.html;
+    }
+}
