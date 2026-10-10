@@ -4,15 +4,19 @@ import { PRODUCT_NAME } from "../config";
 function Logo() {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="6" y="14" width="52" height="36" rx="4" fill="#0A1E38" />
-      <rect x="6" y="14" width="8" height="36" fill="#F7C948" />
-      <path
-        d="M24 32h22M38 24l8 8-8 8"
-        stroke="#fff"
-        strokeWidth="5"
-        fill="none"
-        strokeLinecap="square"
+      <rect
+        x="6"
+        y="10"
+        width="52"
+        height="44"
+        rx="3"
+        fill="#161616"
+        stroke="#2a2a2a"
+        strokeWidth="2"
       />
+      <rect x="12" y="18" width="40" height="10" fill="#ffb400" />
+      <rect x="12" y="32" width="26" height="10" fill="#ffb400" opacity=".55" />
+      <rect x="12" y="46" width="34" height="4" fill="#5be37d" />
     </svg>
   );
 }
@@ -25,11 +29,11 @@ export function Shell({
   children: ReactNode;
 }) {
   return (
-    <>
-      <header className="shell__header">
+    <div className="shell">
+      <header className="top">
         <a className="brand" href="#/">
           <Logo />
-          {PRODUCT_NAME}
+          <span className="brand__name">{PRODUCT_NAME}</span>
         </a>
         <nav className="nav" aria-label="Main">
           <a href="#/" aria-current={section === "new" ? "page" : undefined}>
@@ -41,6 +45,6 @@ export function Shell({
         </nav>
       </header>
       <main className="page">{children}</main>
-    </>
+    </div>
   );
 }

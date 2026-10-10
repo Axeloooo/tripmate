@@ -1,6 +1,6 @@
-# Waywise Web
+# Signposted Web
 
-Vite + React + TypeScript UI templates for TripMate, in the Waywise airport-signage design: white on blue, one yellow edge on every sign, red for a decision. Everything runs on mock data until the API is wired in.
+Vite + React + TypeScript UI templates for TripMate, in the Signposted departures-board design: a black board, amber split-flap times, green for on time, red for a hold. Everything runs on mock data until the API is wired in.
 
 ## Run
 
@@ -18,7 +18,7 @@ npm run build    # typecheck, then production build
 | ---------------------- | ------------------------------------------------------------ |
 | `#/`                   | Trip request form                                            |
 | `#/trips`              | Trip list                                                    |
-| `#/trips/:id`          | Itinerary as signs, times first, budget bar                  |
+| `#/trips/:id`          | Itinerary as a board, times first, budget bar                |
 | `#/trips/:id/progress` | Agents progress view (research, itinerary, budget, reviewer) |
 
 ## Where things live

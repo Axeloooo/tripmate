@@ -10,8 +10,7 @@ export function Button({ quiet, className, children, ...rest }: ButtonProps) {
       className={["button", quiet && "button--quiet", className].filter(Boolean).join(" ")}
       {...rest}
     >
-      <span>{children}</span>
-      <span aria-hidden="true">→</span>
+      {children}
     </button>
   );
 }
@@ -19,8 +18,7 @@ export function Button({ quiet, className, children, ...rest }: ButtonProps) {
 export function LinkButton({ href, children }: { href: string; children: string }) {
   return (
     <a className="button" href={href}>
-      <span>{children}</span>
-      <span aria-hidden="true">→</span>
+      {children}
     </a>
   );
 }
