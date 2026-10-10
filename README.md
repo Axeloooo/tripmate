@@ -25,4 +25,4 @@ pre-commit install
 - Branch from `devel` as `feature|fix|docs|infra/short-description`; open PRs into `devel`.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) with types `feat`, `fix`, `docs`, `infra`, `chore`, `test`, `refactor`, `ci`. `feat` bumps the minor version, `fix` and `infra` the patch version.
 - Python is formatted with `black` and linted with `ruff check`; other files with `prettier`. Type checking uses `mypy`. Python tooling is configured in `apps/api/pyproject.toml`; commit message rules live in `.cz.toml`.
-- Releases are cut by merging `devel` into `main` with a merge commit; CI tags the version and updates `CHANGELOG.md`; merge `main` back into `devel` afterwards. Squash-merge PR titles must be conventional commits.
+- Releases are cut from a `release/YYYY-MM-DD` branch through a squash-merged PR from `devel` into `main`; CI tags the version and updates `CHANGELOG.md`; merge `main` back into `devel` afterwards. PR titles must be conventional commits.
